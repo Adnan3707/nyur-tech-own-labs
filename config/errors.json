@@ -1,0 +1,82 @@
+{
+  "USER_ACCOUNT_DISABLED": {
+    "error": true,
+    "code": 200,
+    "en": "User account has been disabled",
+    "ar": "تم تعطيل حساب المستخدم",
+    "zh": "用户账户已被禁用",
+    "ru": "Учетная запись пользователя была отключена"
+  },
+  "AUTHENTICATION_INVALID": {
+    "error": true,
+    "code": 200,
+    "en": "Authorization invalid!",
+    "ar": "التصريح غير صحيح",
+    "zh": "认证无效",
+    "ru": "Авторизация недействительна"
+  },
+  "ACCOUNT_DOESNT_EXIST": {
+    "error": true,
+    "code": 200,
+    "en": "Sorry, your account does not exist.",
+    "ar": "عفواً ، هذا الحساب غير موجود",
+    "zh": "抱歉，您的账户不存在",
+    "ru": "Извините, ваша учетная запись не существует"
+  },
+  "ACCOUNT_DETAILS_WRONG": {
+    "error": true,
+    "code": 200,
+    "en": "Sorry, your account credentials do not match.",
+    "ar": "عذرا ، بيانات اعتماد حسابك غير متطابقة.",
+    "zh": "抱歉，您的帐户凭据不匹配。",
+    "ru": "К сожалению, учетные данные вашей учетной записи не совпадают."
+  },
+  "DEVICE_DOESNT_EXIST": {
+    "error": true,
+    "code": 200,
+    "en": "Sorry, your device does not exist.",
+    "ar": "عفواً ، هذا الحساب غير موجود",
+    "zh": "抱歉，您的账户不存在",
+    "ru": "Извините, ваша учетная запись не существует"
+  },
+  "ACCOUNT_EXISTS": {
+    "error": true,
+    "code": 200,
+    "en": "Sorry, account already exists.",
+    "ar": "عفواً، الحساب موجود مسبقاً",
+    "zh": "抱歉，账户已存在",
+    "ru": "Извините, учетная запись уже существует"
+  },
+  "SIGN_UP_SUCCESS": {
+    "error": true,
+    "code": 200,
+    "en": "Registered successfully",
+    "ar": "تم التسجيل بنجاح",
+    "zh": "注册成功",
+    "ru": "Зарегистрировано успешно"
+  },
+  "RECOVER_SUCCESS": {
+    "error": true,
+    "code": 200,
+    "en": "Recovery password sent to your registered email",
+    "ar": "تم إرسال كلمة مرور الاسترداد إلى بريدك الإلكتروني المسجل",
+    "zh": "恢复密码已发送至您的注册邮箱",
+    "ru": "Пароль восстановления отправлен на ваш зарегистрированный адрес электронной почты"
+  },
+  "SERVER_ERROR": {
+    "error": true,
+    "code": 500,
+    "en": "Error in servicing your request",
+    "ar": "حدث خطأ أثناء تنفيذ طلبك",
+    "zh": "您的请求错误",
+    "ru": "Ошибка в обслуживании вашего запроса"
+  },
+  "AUTHENTICATION_SUCCESS": {
+    "error": true,
+    "code": 200,
+    "en": "Authentication successful",
+    "ar": "المصادقة ناجحة",
+    "zh": "认证成功",
+    "ru": "Аутентификация прошла успешно"
+  }
+}

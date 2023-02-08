@@ -1,0 +1,20 @@
+{
+    "apps": [
+        {
+            "name": "ci-auth",
+            "script": "server.js",
+            "log_date_format": "YYYY-MM-DD HH:mm:ss",
+	        "instances": "2",
+            "exec_mode": "cluster",
+            "watch": true,
+            "ignore_watch": [
+                "node_modules",
+                "public/images",
+                "log"
+            ],
+            "env": {
+                "TZ": "Africa/Tunis"
+            }
+        }
+    ]
+}
