@@ -103,7 +103,6 @@ module.exports = async function (fastify, opts) {
         let deviceDetails = {
           device_id: data.device_id,
           username: data.email,
-          product_name: request.body.product_name,
         };
         await fastify.db.Device.create(deviceDetails);
         // CREATING DEVICE DETAIL ENDS
