@@ -21,12 +21,12 @@ module.exports = fp(async function (fastify, opts) {
     sign: {
       algorithm: "RS256",
       expiresIn: `${process.env.JWT_EXPIRY}h`, // JWT EXPIRY IN DAYS 'd'
-      audience: "ci-systems",
-      issuer: "centurioninvest.com",
+      audience: "oun-labs",
+      issuer: "ounlabs.com",
     },
     verify: {
-      audience: "ci-systems",
-      issuer: "centurioninvest.com",
+      audience: "oun-labs",
+      issuer: "ounlabs.com",
     },
   });
 
