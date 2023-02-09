@@ -11,15 +11,25 @@ const {
   DEVICE_DOESNT_EXIST,
   AUTHENTICATION_SUCCESS,
 } = require("../config/errors.json");
+const users = require("../models/user");
+const audit_trial = require("../models/audit_trial");
+const devices = require("../models/device");
 
 module.exports = async function (fastify, opts) {
   fastify.get("/", async function (request, reply) {
-    const users = fastify.mongo.db.collection("users");
-    console.log(users);
-    const result = await users.find({}).toArray();
-    return reply.code(200).send({
-      message: result,
-    });
+    // const users = fastify.mongo.db.collection("users");
+    // console.log(users);
+    // const result = await users.find({}).toArray();
+    // return reply.code(200).send({
+    //   message: result,
+    // });
+    // let user = {
+    //   email: "abid@gmail.com",
+    //   password: "abid@123",
+    //   device: "device_id",
+    // };
+    // const newNote = await users.create(user);
+    // console.log(newNote);
   });
 
   fastify.post("/", async function (request, reply) {
@@ -28,12 +38,11 @@ module.exports = async function (fastify, opts) {
     // const data = { name, age };
     // const result = await users.insertOne(data);
     // reply.code(201).send(result);
-
-    const users = this.mongo.db.collection("new_users");
-    const { name, age } = request.body;
-    const data = { name, age };
-    const result = await users.insertOne(data);
-    reply.code(201).send(result);
+    // const users = this.mongo.db.collection("new_users");
+    // const { name, age } = request.body;
+    // const data = { name, age };
+    // const result = await users.insertOne(data);
+    // reply.code(201).send(result);
   });
 
   fastify.post(
@@ -56,7 +65,7 @@ module.exports = async function (fastify, opts) {
       let data = request.body;
       let resp,
         logs = {
-          username: request.body.email,
+          email: request.body.email,
           action: "Register",
           url: "/register",
           request_header: JSON.stringify(request.headers),
@@ -67,10 +76,7 @@ module.exports = async function (fastify, opts) {
 
       try {
         // GETTING USER
-        const users = fastify.mongo.db.collection("users");
-        const user = await users.findOne({
-          _id: new ObjectID(req.body.email),
-        });
+        const user = await users.find({ email: data.email });
 
         // CHECKING USER IF ALREADY EXISTS
         if (user) {
@@ -80,17 +86,14 @@ module.exports = async function (fastify, opts) {
           };
           logs.response = JSON.stringify(resp);
           logs.status = "FAILURE";
-          await fastify.db.audit_trail.create(logs);
+          await audit_trial.create(logs);
           reply.code(400);
           return resp;
         }
         // CHECKING USER ENDS
 
         //ELSE -  HASHING THE PASSWORD
-        let hashedPassword = fastify.db.User.setPassword(
-          data.email,
-          data.password
-        );
+        let hashedPassword = users.setPassword(data.email, data.password);
         data.password = hashedPassword;
         // HASHING PASSWORD ENDS
 
@@ -109,7 +112,7 @@ module.exports = async function (fastify, opts) {
         if (token.statusCode != 202) {
           logs.response = JSON.stringify(token);
           logs.status = "FAILURE";
-          await fastify.db.audit_trail.create(logs);
+          await audit_trial.create(logs);
           reply.code(token.statusCode || 401);
           return token;
         }
@@ -117,9 +120,9 @@ module.exports = async function (fastify, opts) {
         // CREATING DEVICE DETAILS
         let deviceDetails = {
           device_id: data.device_id,
-          username: data.email,
+          email: data.email,
         };
-        await fastify.db.Device.create(deviceDetails);
+        await devices.create(deviceDetails);
         // CREATING DEVICE DETAIL ENDS
 
         reply.code(200);
@@ -132,7 +135,7 @@ module.exports = async function (fastify, opts) {
         };
         logs.response = JSON.stringify(resp);
         logs.status = "SUCCESS";
-        await fastify.db.audit_trail.create(logs);
+        await audit_trial.create(logs);
         return resp;
       } catch (err) {
         console.error(err);
@@ -142,7 +145,7 @@ module.exports = async function (fastify, opts) {
         };
         logs.response = JSON.stringify(resp);
         logs.status = "FAILURE";
-        await fastify.db.audit_trail.create(logs);
+        await audit_trial.create(logs);
         reply.code(400);
         return resp;
       }
