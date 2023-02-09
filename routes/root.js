@@ -407,4 +407,132 @@ module.exports = async function (fastify, opts) {
       }
     }
   );
+
+  fastify.post(
+    "/recover",
+    {
+      schema: {
+        description: "Recover Account",
+        tags: ["JWT"],
+        summary: "Recover Account",
+        body: {
+          $ref: "recover#",
+        },
+      },
+    },
+    async function (request, reply) {
+      var language = request.headers["accept-language"]
+        ? request.headers["accept-language"]
+        : "en";
+
+      let data = request.body;
+      let resp,
+        logs = {
+          email: request.body.email,
+          action: "Recover",
+          url: "/recover",
+          request_header: JSON.stringify(request.headers),
+          request: JSON.stringify(request.body),
+          axios_request: "",
+          axios_response: "",
+        };
+
+      try {
+        // GETTING USER
+        let user = await users.findOne({
+          email: data.email,
+        });
+
+        // IF USER DOES NOT EXIST
+        if (user == null) {
+          resp = {
+            statusCode: 400,
+            message: ACCOUNT_DOESNT_EXIST[language],
+          };
+          logs.response = JSON.stringify(resp);
+          logs.status = "FAILURE";
+          await audit_trail.create(logs);
+          reply.code(400);
+          return resp;
+        }
+        // CHECKING USER ENDS
+
+        // GETTING DEVICE DETAILS
+        let device = await Devices.findOne({
+          email: data.email,
+          device_id: data.device_id,
+        });
+        // CHECKING IF DEVICE EXISTS
+
+        if (device == null) {
+          resp = {
+            statusCode: 400,
+            message: DEVICE_DOESNT_EXIST[language],
+          };
+          logs.response = JSON.stringify(resp);
+          logs.status = "FAILURE";
+          await audit_trail.create(logs);
+          reply.code(400);
+          return resp;
+        }
+
+        //ELSE -  HASHING THE PASSWORD WITH SELF GENERATED PASSWORD
+        let newPassword = Math.floor(
+          100000000 + Math.random() * 900000000
+        ).toString();
+
+        let hashedPassword = users.setPassword(data.email, newPassword);
+        data.password = hashedPassword;
+        // HASHING PASSWORD ENDS
+
+        // UPDATING USER WITH THE NEW GENERATED PASSWORD
+        await users.updateOne(
+          {
+            email: data.email,
+          },
+          {
+            password: hashedPassword,
+          }
+        );
+
+        // TODO - AFTER UPDATE SEND EMAIL
+        console.log("NEW PASSSWORD: ", newPassword);
+
+        //SENDING BACK RESPONSE
+        reply.code(200);
+        resp = {
+          statusCode: 200,
+          message: RECOVER_SUCCESS[language],
+        };
+        logs.response = JSON.stringify(resp);
+        logs.status = "SUCCESS";
+        await audit_trail.create(logs);
+        return resp;
+      } catch (err) {
+        console.error(err);
+        resp = {
+          statusCode: 400,
+          message: SERVER_ERROR[language],
+        };
+        logs.response = JSON.stringify(resp);
+        logs.status = "FAILURE";
+        await audit_trail.create(logs);
+        reply.code(400);
+        return resp;
+      }
+    }
+  );
+
+  fastify.post(
+    "/",
+    {
+      preValidation: [fastify.authorize],
+    },
+    async function (request, reply) {
+      return reply.code(200).send({
+        statusCode: 200,
+        message: "OUN LABS AUTH SERVER RUNNING...",
+      });
+    }
+  );
 };
