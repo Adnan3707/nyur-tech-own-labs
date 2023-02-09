@@ -92,6 +92,7 @@ module.exports = async function (fastify, opts) {
         // Making JWT Payload
         let payload = {
           email: data.email,
+          role: data.role,
         };
 
         // Generating Token
@@ -111,7 +112,7 @@ module.exports = async function (fastify, opts) {
           device_id: data.device_id,
           email: data.email,
         };
-        await Ds.create(deviceDetails);
+        await Devices.create(deviceDetails);
         // CREATING DEVICE DETAIL ENDS
 
         reply.code(200);

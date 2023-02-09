@@ -5,6 +5,11 @@ const { Schema } = mongoose;
 const userSchema = new Schema({
   email: { type: String, required: true },
   password: { type: String, required: true },
+  role: {
+    type: String,
+    enum: ["USER", "ADMINISTRATOR"],
+    default: "USER",
+  },
   device_id: { type: String, required: true },
   last_activity: { type: Date, default: Date.now },
   user_status: { type: Boolean, required: true, default: true },

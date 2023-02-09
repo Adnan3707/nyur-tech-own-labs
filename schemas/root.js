@@ -4,11 +4,12 @@ module.exports = fp(async function (fastify, opts) {
   const register = {
     $id: "register_product",
     type: "object",
-    required: ["device_id", "email", "password"],
+    required: ["device_id", "email", "password", "role"],
     properties: {
       device_id: { type: "string" },
       email: { type: "string", format: "email" },
       password: { type: "string", minLength: 8 },
+      role: { type: "string", enum: ["USER", "ADMINISTRATOR"] },
     },
   };
 
