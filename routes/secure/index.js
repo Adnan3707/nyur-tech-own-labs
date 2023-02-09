@@ -3,6 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 const Sequelize = require("sequelize");
+const audit_trail = require("../../models/audit_trial");
 
 module.exports = async function (fastify, opts) {
   fastify.get(
@@ -82,7 +83,7 @@ module.exports = async function (fastify, opts) {
       };
       logs.response = JSON.stringify(resp);
       logs.status = "SUCCESS";
-      await fastify.db.audit_trail.create(logs);
+      await audit_trail.create(logs);
       reply.code(200);
       return resp;
     }
