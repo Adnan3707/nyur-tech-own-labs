@@ -151,7 +151,7 @@ module.exports = fp(async function (fastify, opts) {
       const jwt_payload = await request.jwtVerify();
 
       // If role does not exist
-      if (!jwt_payload.role == "ROOT") {
+      if (jwt_payload.role !== "ADMINISTRATOR") {
         console.log("ROOT AUTHORIZE: ROLE MISMATCH FOUND");
         permit.fail(reply.raw);
         throw new Error("Invalid Role!");
@@ -172,6 +172,7 @@ module.exports = fp(async function (fastify, opts) {
         permit.fail(reply.raw);
         throw new Error(message);
       }
+
       if (!user.user_status) {
         console.log("USER BLOCKED OR DISABLED: Root account has been disabled");
         // permit.fail(reply.res);
