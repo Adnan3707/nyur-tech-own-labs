@@ -5,6 +5,8 @@ const path = require("path");
 const moment = require("moment");
 var randToken = require("rand-token");
 const { ACCOUNT_DOESNT_EXIST } = require("../config/errors.json");
+const users = require("../models/user");
+const Token = require("../models/token");
 
 module.exports = fp(async function (fastify, opts) {
   fastify.register(require("@fastify/jwt"), {
@@ -20,7 +22,7 @@ module.exports = fp(async function (fastify, opts) {
     },
     sign: {
       algorithm: "RS256",
-      expiresIn: `${process.env.JWT_EXPIRY}h`, // JWT EXPIRY IN DAYS 'd'
+      expiresIn: `${process.env.JWT_EXPIRY}d`, // JWT EXPIRY IN DAYS 'd'
       audience: "oun-labs",
       issuer: "ounlabs.com",
     },
@@ -33,18 +35,18 @@ module.exports = fp(async function (fastify, opts) {
   fastify.decorate("jwtsign", async function (data, device_id, lang) {
     try {
       let language = lang ? lang : "en";
-      // Throwing error incase Username does not exist
-      if (!data.username) {
-        throw new Error("Username required!");
+      // Throwing error incase email does not exist
+      if (!data.email) {
+        throw new Error("email required!");
       }
       if (!device_id) {
         throw new Error("Device ID required!");
       }
 
       // FIND IF THE USER IS ACTIVE
-      let user = await fastify.db.User.findOne({
-        where: { username: data.username, user_status: true },
-        attributes: ["username", "user_status"],
+      let user = await users.find({
+        where: { email: data.email, user_status: true },
+        attributes: ["email", "user_status"],
       });
 
       if (!user) {
@@ -55,18 +57,18 @@ module.exports = fp(async function (fastify, opts) {
       }
 
       // Updating the user activity if the user exists
-      fastify.db.User.update(
+      users.updateOne(
         { last_activity: new Date() },
-        { where: { username: data.username } }
+        { where: { email: data.email } }
       );
 
       const access_token = fastify.jwt.sign(data);
       const refresh_token = randToken.uid(256);
 
       // SAVING ACCESS TOKEN WITH EXPIRY IN DAYS FROM ENV
-      let expiry = moment().add(process.env.JWT_EXPIRY, "hours");
-      await fastify.db.Token.create({
-        username: data.username,
+      let expiry = moment().add(process.env.JWT_EXPIRY, "days");
+      await Token.create({
+        email: data.email,
         token_type: "ACCESS",
         token: access_token,
         token_expiry: expiry,
@@ -76,15 +78,15 @@ module.exports = fp(async function (fastify, opts) {
       // SAVING THE REFRESH TOKEN WITH EXPIRY OF (BASE EXPIRY+1 days in DB)
       let refreshed_days = parseInt(process.env.JWT_EXPIRY) + 1;
       let refresh_expiry = moment().add(refreshed_days, "hours");
-      await fastify.db.Token.create({
-        username: data.username,
+      await Token.create({
+        email: data.email,
         token_type: "REFRESH",
         token: refresh_token,
         token_expiry: refresh_expiry,
         device_fingerprint: device_id,
       });
 
-      console.log("JWT TOKEN GENERATED FOR: ", data.username);
+      console.log("JWT TOKEN GENERATED FOR: ", data.email);
       return {
         statusCode: 202,
         message: "Token generated successfully",

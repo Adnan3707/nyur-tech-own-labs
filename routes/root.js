@@ -76,8 +76,9 @@ module.exports = async function (fastify, opts) {
 
       try {
         // GETTING USER
-        const user = await users.find({ email: data.email });
+        const user = await users.findOne({ email: data.email });
 
+        console.log(user);
         // CHECKING USER IF ALREADY EXISTS
         if (user) {
           resp = {
@@ -98,11 +99,11 @@ module.exports = async function (fastify, opts) {
         // HASHING PASSWORD ENDS
 
         // CREATING NEW USER
-        const result = await users.insertOne(data);
+        const result = await users.create(data);
 
         // Making JWT Payload
         let payload = {
-          username: data.email,
+          email: data.email,
         };
 
         // Generating Token
