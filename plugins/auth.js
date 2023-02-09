@@ -9,6 +9,7 @@ const {
   ACCOUNT_DOESNT_EXIST,
 } = require("../config/errors.json");
 const users = require("../models/user");
+const Token = require("../models/token");
 
 module.exports = fp(async function (fastify, opts) {
   const permit = new Bearer();
@@ -76,14 +77,14 @@ module.exports = fp(async function (fastify, opts) {
       }
 
       // Double Checking the Token Identification from DB
-      const token_data = await fastify.db.Token.findOne({
-        where: {
+      const token_data = await Token.findOne(
+        {
           token: token,
           email: jwt_payload.email,
           device_fingerprint: request.body.device_id,
         },
-        attributes: ["email", "token_expiry"],
-      });
+        "email token_expiry"
+      );
 
       // IF NOT RECORD FOUND IN DB
       if (!token_data) {
