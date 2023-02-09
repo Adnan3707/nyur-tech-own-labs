@@ -8,6 +8,7 @@ const {
   AUTHENTICATION_INVALID,
   ACCOUNT_DOESNT_EXIST,
 } = require("../config/errors.json");
+const users = require("../models/user");
 
 module.exports = fp(async function (fastify, opts) {
   const permit = new Bearer();
@@ -32,12 +33,12 @@ module.exports = fp(async function (fastify, opts) {
 
       // Verifying the authenticity of the Token
       const jwt_payload = await request.jwtVerify();
-      const user = await fastify.db.User.findOne({
-        where: {
-          username: jwt_payload.username,
+      const user = await users.findOne(
+        {
+          email: jwt_payload.email,
         },
-        attributes: ["user_status"],
-      });
+        "user_status"
+      );
 
       if (!user) {
         console.log("BASIC AUTH: USER DOES NOT EXIST");
@@ -68,7 +69,7 @@ module.exports = fp(async function (fastify, opts) {
       //CHECKING FOR THE DEVICE ID PARAM
       if (!request.body.device_id) {
         console.log(
-          "CUSTOMER AUTHORIZE: " + jwt_payload.username + " DEVICE ID MISSING"
+          "CUSTOMER AUTHORIZE: " + jwt_payload.email + " DEVICE ID MISSING"
         );
         permit.fail(reply.raw);
         throw new Error("body should have required property 'device_id'");
@@ -78,18 +79,16 @@ module.exports = fp(async function (fastify, opts) {
       const token_data = await fastify.db.Token.findOne({
         where: {
           token: token,
-          username: jwt_payload.username,
+          email: jwt_payload.email,
           device_fingerprint: request.body.device_id,
         },
-        attributes: ["username", "token_expiry"],
+        attributes: ["email", "token_expiry"],
       });
 
       // IF NOT RECORD FOUND IN DB
       if (!token_data) {
         console.log(
-          "AUTHORIZE: " +
-            jwt_payload.username +
-            " TOKEN NOT AVAILABLE IN DATABASE"
+          "AUTHORIZE: " + jwt_payload.email + " TOKEN NOT AVAILABLE IN DATABASE"
         );
         message = language
           ? AUTHENTICATION_INVALID[language]
@@ -108,7 +107,7 @@ module.exports = fp(async function (fastify, opts) {
         console.log(
           "AUTHORIZE: " +
             " TOKEN EXPIRED IN THE DATABASE FOR " +
-            jwt_payload.username
+            jwt_payload.email
         );
         permit.fail(reply.raw);
         throw new Error("Signed authorization token expired");
@@ -117,13 +116,13 @@ module.exports = fp(async function (fastify, opts) {
       // TOKEN VALIDITY CHECK ENDS
 
       console.log(
-        "AUTHORIZE: " + jwt_payload.username + " AUTHORIZED SUCCESSFULLY"
+        "AUTHORIZE: " + jwt_payload.email + " AUTHORIZED SUCCESSFULLY"
       );
 
       // UPDATING LAST ACTIVITY OF THE USER
-      fastify.db.User.update(
-        { last_activity: new Date() },
-        { where: { username: jwt_payload.username } }
+      users.updateOne(
+        { email: jwt_payload.email },
+        { last_activity: new Date() }
       );
 
       // Authentication succeeded, save the context and proceed...
