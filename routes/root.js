@@ -11,9 +11,11 @@ const {
   DEVICE_DOESNT_EXIST,
   AUTHENTICATION_SUCCESS,
 } = require("../config/errors.json");
+const moment = require("moment");
 const users = require("../models/user");
-const audit_trial = require("../models/audit_trial");
+const audit_trail = require("../models/audit_trial");
 const devices = require("../models/device");
+const Token = require("../models/token");
 
 module.exports = async function (fastify, opts) {
   fastify.get("/", async function (request, reply) {
@@ -32,18 +34,7 @@ module.exports = async function (fastify, opts) {
     // console.log(newNote);
   });
 
-  fastify.post("/", async function (request, reply) {
-    // const users = this.mongo.db.collection("users");
-    // const { name, age } = request.body;
-    // const data = { name, age };
-    // const result = await users.insertOne(data);
-    // reply.code(201).send(result);
-    // const users = this.mongo.db.collection("new_users");
-    // const { name, age } = request.body;
-    // const data = { name, age };
-    // const result = await users.insertOne(data);
-    // reply.code(201).send(result);
-  });
+  fastify.post("/", async function (request, reply) {});
 
   fastify.post(
     "/register",
@@ -61,7 +52,6 @@ module.exports = async function (fastify, opts) {
       let language = request.headers["accept-language"]
         ? request.headers["accept-language"]
         : "en";
-      request.body.username = request.body.email;
       let data = request.body;
       let resp,
         logs = {
@@ -87,7 +77,7 @@ module.exports = async function (fastify, opts) {
           };
           logs.response = JSON.stringify(resp);
           logs.status = "FAILURE";
-          await audit_trial.create(logs);
+          await audit_trail.create(logs);
           reply.code(400);
           return resp;
         }
@@ -113,7 +103,7 @@ module.exports = async function (fastify, opts) {
         if (token.statusCode != 202) {
           logs.response = JSON.stringify(token);
           logs.status = "FAILURE";
-          await audit_trial.create(logs);
+          await audit_trail.create(logs);
           reply.code(token.statusCode || 401);
           return token;
         }
@@ -123,7 +113,7 @@ module.exports = async function (fastify, opts) {
           device_id: data.device_id,
           email: data.email,
         };
-        await devices.create(deviceDetails);
+        await Ds.create(deviceDetails);
         // CREATING DEVICE DETAIL ENDS
 
         reply.code(200);
@@ -136,7 +126,7 @@ module.exports = async function (fastify, opts) {
         };
         logs.response = JSON.stringify(resp);
         logs.status = "SUCCESS";
-        await audit_trial.create(logs);
+        await audit_trail.create(logs);
         return resp;
       } catch (err) {
         console.error(err);
@@ -146,8 +136,154 @@ module.exports = async function (fastify, opts) {
         };
         logs.response = JSON.stringify(resp);
         logs.status = "FAILURE";
-        await audit_trial.create(logs);
+        await audit_trail.create(logs);
         reply.code(400);
+        return resp;
+      }
+    }
+  );
+
+  fastify.post(
+    "/refresh",
+    {
+      schema: {
+        description: "Refresh Token",
+        tags: ["JWT"],
+        summary: "Refresh Token",
+        body: {
+          $ref: "refresh#",
+        },
+      },
+    },
+    async function (request, reply) {
+      var language = request.headers["accept-language"]
+        ? request.headers["accept-language"]
+        : "en";
+
+      let resp,
+        logs = {
+          action: "Refresh",
+          url: "/refresh",
+          request_header: JSON.stringify(request.headers),
+          request: JSON.stringify(request.body),
+          axios_request: "",
+          axios_response: "",
+        };
+
+      try {
+        // GETTING THE REFRESHED TOKEN FROM PARAM AND CHECKING IT ON DB
+        let refreshed_token = await Token.findOneAndUpdate(
+          {
+            token: request.body.refresh_token,
+            token_type: "REFRESH",
+            device_fingerprint: request.body.device_id,
+            token_status: true,
+          },
+          { token_status: false }
+        );
+
+        let message;
+        // IF NO RECORDS ARE FOUND
+        if (!refreshed_token) {
+          reply.code(401);
+          resp = {
+            statusCode: 401,
+            message: AUTHENTICATION_INVALID[language],
+          };
+          return resp;
+        }
+
+        //ADDING USERNAME TO THE AUDIT TRIAL LOG
+        logs.email = refreshed_token.email;
+
+        //CHECKING IF THE USER IS ACTIVE
+        const userStatus = await users.findOne(
+          {
+            email: refreshed_token.email,
+          },
+          "user_status"
+        );
+
+        if (!userStatus) {
+          console.warn("REFRESH AUTH:", "USER DOES NOT EXIST");
+          message = ACCOUNT_DOESNT_EXIST[language];
+          reply.code(401);
+          throw new Error(message);
+        }
+        if (!userStatus.user_status) {
+          console.warn(
+            "USER BLOCKED OR DISABLED IN REFRESH:",
+            "User account has been disabled"
+          );
+          reply.code(400);
+          resp = {
+            statusCode: 400,
+            message: USER_ACCOUNT_DISABLED[language],
+          };
+          logs.response = JSON.stringify(resp);
+          logs.status = "FAILURE";
+          await audit_trail.create(logs);
+          return resp;
+        }
+
+        // CHECKING TOKEN VALIDITY//
+        let now = moment(new Date()); // todays date/time
+        let end = moment(refreshed_token.token_expiry); // expiry date/time
+        let duration = moment.duration(end.diff(now));
+        let expiry_minutes = duration.asMinutes();
+
+        if (expiry_minutes < 0) {
+          reply.code(401);
+          resp = {
+            statusCode: 401,
+            message: "Refresh token has been expired!",
+          };
+          logs.response = JSON.stringify(resp);
+          logs.status = "FAILURE";
+          await audit_trail.create(logs);
+          return resp;
+        }
+        // REFRESH TOKEN VALIDITY CHECK ENDS//
+
+        // GENERATING A NEW REFRESHED JWT TOKEN
+        let payload = {
+          email: refreshed_token.email,
+        };
+
+        // NEW REFRESHED TOKEN SIGN
+        let token = await fastify.jwtsign(
+          payload,
+          request.body.device_id,
+          language
+        );
+
+        // Checking Response from JWT SIGN Plugin
+        if (token.statusCode != 202) {
+          reply.code(token.statusCode || 401);
+          return token;
+        }
+
+        reply.code(202);
+        resp = {
+          statusCode: 202,
+          message: "Token refreshed successfully",
+          access_token: token.access_token,
+          refresh_token: token.refresh_token,
+        };
+        logs.response = JSON.stringify(resp);
+        logs.status = "SUCCESS";
+        await audit_trail.create(logs);
+        return resp;
+      } catch (err) {
+        console.error(err);
+        reply.code(400);
+        resp = {
+          statusCode: 400,
+          message: SERVER_ERROR[language],
+        };
+        logs.response = JSON.stringify(resp);
+        logs.status = "FAILURE";
+        await audit_trail.create(logs);
         return resp;
       }
     }
