@@ -14,7 +14,7 @@ const {
 const moment = require("moment");
 const users = require("../models/user");
 const audit_trail = require("../models/audit_trial");
-const devices = require("../models/device");
+const Devices = require("../models/device");
 const Token = require("../models/token");
 
 module.exports = async function (fastify, opts) {
@@ -33,8 +33,6 @@ module.exports = async function (fastify, opts) {
     // const newNote = await users.create(user);
     // console.log(newNote);
   });
-
-  fastify.post("/", async function (request, reply) {});
 
   fastify.post(
     "/register",
@@ -193,7 +191,7 @@ module.exports = async function (fastify, opts) {
           return resp;
         }
 
-        //ADDING USERNAME TO THE AUDIT TRIAL LOG
+        //ADDING email TO THE AUDIT TRIAL LOG
         logs.email = refreshed_token.email;
 
         //CHECKING IF THE USER IS ACTIVE
@@ -284,6 +282,127 @@ module.exports = async function (fastify, opts) {
         logs.response = JSON.stringify(resp);
         logs.status = "FAILURE";
         await audit_trail.create(logs);
+        return resp;
+      }
+    }
+  );
+
+  fastify.post(
+    "/auth",
+    {
+      schema: {
+        description: "Auth Account",
+        tags: ["JWT"],
+        summary: "Auth Account",
+        body: {
+          $ref: "auth#",
+        },
+      },
+    },
+    async function (request, reply) {
+      var language = request.headers["accept-language"]
+        ? request.headers["accept-language"]
+        : "en";
+
+      let data = request.body;
+      let resp,
+        logs = {
+          email: request.body.email,
+          action: "Authorization",
+          url: "/auth",
+          request_header: JSON.stringify(request.headers),
+          request: JSON.stringify(request.body),
+          axios_request: "",
+          axios_response: "",
+        };
+
+      // HASHING THE NEW PASSWORD
+      let hashedPassword = users.setPassword(data.email, data.password);
+      data.password = hashedPassword;
+
+      try {
+        // GETTING USER
+        let user = await users.findOne({
+          email: data.email,
+          password: data.password,
+        });
+
+        // IF USER DOES NOT EXIST
+        if (user == null) {
+          resp = {
+            statusCode: 400,
+            message: ACCOUNT_DETAILS_WRONG[language],
+          };
+          logs.response = JSON.stringify(resp);
+          logs.status = "FAILURE";
+          await audit_trail.create(logs);
+          reply.code(400);
+          return resp;
+        }
+        // CHECKING USER ENDS
+
+        // GETTING DEVICE DETAILS
+        let device = await Devices.findOne({
+          email: data.email,
+          device_id: data.device_id,
+        });
+
+        // CHECKING IF DEVICE EXISTS
+        console.log("~~~~ DEVICE ~~~~");
+        console.log(device);
+
+        if (device == null) {
+          resp = {
+            statusCode: 400,
+            message: DEVICE_DOESNT_EXIST[language],
+          };
+          logs.response = JSON.stringify(resp);
+          logs.status = "FAILURE";
+          await audit_trail.create(logs);
+          reply.code(400);
+          return resp;
+        }
+
+        // Making JWT Payload
+        let payload = {
+          email: data.email,
+        };
+
+        // Generating Token
+        let token = await fastify.jwtsign(payload, data.device_id, language);
+
+        // Checking Response from JWT SIGN Plugin
+        if (token.statusCode != 202) {
+          logs.response = JSON.stringify(token);
+          logs.status = "FAILURE";
+          await audit_trail.create(logs);
+          reply.code(token.statusCode || 401);
+          return token;
+        }
+
+        //SENDING BACK RESPONSE
+        reply.code(200);
+        resp = {
+          statusCode: 200,
+          message: AUTHENTICATION_SUCCESS[language],
+          registered_device: data.device_id,
+          access_token: token.access_token,
+          refresh_token: token.refresh_token,
+        };
+        logs.response = JSON.stringify(resp);
+        logs.status = "SUCCESS";
+        await audit_trail.create(logs);
+        return resp;
+      } catch (err) {
+        console.error(err);
+        resp = {
+          statusCode: 400,
+          message: SERVER_ERROR[language],
+        };
+        logs.response = JSON.stringify(resp);
+        logs.status = "FAILURE";
+        await audit_trail.create(logs);
+        reply.code(400);
         return resp;
       }
     }
