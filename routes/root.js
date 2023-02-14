@@ -19,6 +19,7 @@ const Token = require("../models/token");
 
 module.exports = async function (fastify, opts) {
   fastify.get("/", async function (request, reply) {
+    return reply.sendFile("index.html");
     // const users = fastify.mongo.db.collection("users");
     // console.log(users);
     // const result = await users.find({}).toArray();

@@ -22,6 +22,8 @@
     "@fastify/jwt": "^6.5.0",
     "@fastify/mongodb": "^6.2.0",
     "@fastify/sensible": "^5.0.0",
+    "@fastify/static": "^6.9.0",
+    "@fastify/websocket": "^7.1.2",
     "fastify": "^4.12.0",
     "fastify-axios": "^1.2.6",
     "fastify-cli": "^5.7.0",

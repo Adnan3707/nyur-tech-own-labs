@@ -13,6 +13,10 @@ module.exports = async function (fastify, opts) {
   fastify.register(require("@fastify/formbody"));
   fastify.register(require("@fastify/cors"));
   fastify.register(require("fastify-axios"));
+  fastify.register(require("@fastify/websocket"));
+  fastify.register(require("@fastify/static"), {
+    root: path.join(__dirname, "www"),
+  });
 
   // This loads all plugins defined in plugins
   // those should be support plugins that are reused
