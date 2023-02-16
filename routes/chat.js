@@ -39,7 +39,38 @@ module.exports = async function (fastify, opts) {
     }
   });
 
-  fastify.post("/save", async function (request, reply) {});
+  fastify.post("/save", async function (request, reply) {
+    try {
+      let language = request.headers["accept-language"]
+        ? request.headers["accept-language"]
+        : "en";
+
+      Responses.create(request.body);
+
+      //SENDING BACK RESPONSE
+      reply.code(200);
+      resp = {
+        statusCode: 200,
+        message: SUCCESS[language],
+        data: questions,
+      };
+      logs.response = JSON.stringify(resp);
+      logs.status = "SUCCESS";
+      await audit_trail.create(logs);
+      return resp;
+    } catch (err) {
+      console.error(err);
+      resp = {
+        statusCode: 400,
+        message: SERVER_ERROR[language],
+      };
+      logs.response = JSON.stringify(resp);
+      logs.status = "FAILURE";
+      await audit_trail.create(logs);
+      reply.code(400);
+      return resp;
+    }
+  });
 
   fastify.register(async function (fastify) {
     /* fastify.addHook("preValidation", async (request, reply) => {
