@@ -3,13 +3,17 @@ const Chat = require("../models/chat");
 const Connection = require("../models/chat_connection");
 
 module.exports = async function (fastify, opts) {
+  fastify.post("/welcome", async function (request, reply) {});
+
+  fastify.post("/save", async function (request, reply) {});
+
   fastify.register(async function (fastify) {
-    fastify.addHook("preValidation", async (request, reply) => {
+    /* fastify.addHook("preValidation", async (request, reply) => {
       // check if the request is authenticated
       //   if (!request.isAuthenticated()) {
       //     await reply.code(401).send("not authenticated");
       //   }
-    });
+    }); */
 
     fastify.get(
       "/chat",
