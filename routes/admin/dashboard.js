@@ -1,5 +1,6 @@
 "use strict";
 const Questions = require("../../models/questions");
+const audit_trail = require("../../models/audit_trial");
 const { SERVER_ERROR, SUCCESS } = require("../../config/errors.json");
 
 module.exports = async function (fastify, opts) {
@@ -22,6 +23,21 @@ module.exports = async function (fastify, opts) {
       preValidation: [fastify.rootauthorize],
     },
     async function (request, reply) {
+      let language = request.headers["accept-language"]
+        ? request.headers["accept-language"]
+        : "en";
+
+      let resp,
+        logs = {
+          email: request.body.email ? request.body.email : "NA",
+          action: "Welcome",
+          url: "/welcome",
+          request_header: JSON.stringify(request.headers),
+          request: JSON.stringify(request.body),
+          axios_request: "",
+          axios_response: "",
+        };
+
       try {
         let qs = await Questions.create(request.body);
 

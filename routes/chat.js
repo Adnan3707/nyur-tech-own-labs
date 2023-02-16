@@ -1,5 +1,6 @@
 "use strict";
 const { SERVER_ERROR, SUCCESS } = require("../config/errors.json");
+const audit_trail = require("../models/audit_trial");
 const Chat = require("../models/chat");
 const Connection = require("../models/chat_connection");
 const Questions = require("../models/questions");
@@ -11,8 +12,19 @@ module.exports = async function (fastify, opts) {
       ? request.headers["accept-language"]
       : "en";
 
+    let resp,
+      logs = {
+        email: request.body.email ? request.body.email : "NA",
+        action: "Welcome",
+        url: "/welcome",
+        request_header: JSON.stringify(request.headers),
+        request: JSON.stringify(request.body),
+        axios_request: "",
+        axios_response: "",
+      };
+
     try {
-      let questions = Questions.find();
+      let questions = await Questions.find();
 
       //SENDING BACK RESPONSE
       reply.code(200);
@@ -40,19 +52,29 @@ module.exports = async function (fastify, opts) {
   });
 
   fastify.post("/save", async function (request, reply) {
-    try {
-      let language = request.headers["accept-language"]
-        ? request.headers["accept-language"]
-        : "en";
+    let language = request.headers["accept-language"]
+      ? request.headers["accept-language"]
+      : "en";
 
-      Responses.create(request.body);
+    let resp,
+      logs = {
+        email: request.body.email ? request.body.email : "NA",
+        action: "Save",
+        url: "/save",
+        request_header: JSON.stringify(request.headers),
+        request: JSON.stringify(request.body),
+        axios_request: "",
+        axios_response: "",
+      };
+
+    try {
+      await Responses.create(request.body);
 
       //SENDING BACK RESPONSE
       reply.code(200);
       resp = {
         statusCode: 200,
         message: SUCCESS[language],
-        data: questions,
       };
       logs.response = JSON.stringify(resp);
       logs.status = "SUCCESS";
