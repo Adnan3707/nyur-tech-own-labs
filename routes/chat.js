@@ -1,9 +1,43 @@
 "use strict";
+const { SERVER_ERROR, SUCCESS } = require("../config/errors.json");
 const Chat = require("../models/chat");
 const Connection = require("../models/chat_connection");
+const Questions = require("../models/questions");
+const Responses = require("../models/question_response");
 
 module.exports = async function (fastify, opts) {
-  fastify.post("/welcome", async function (request, reply) {});
+  fastify.post("/welcome", async function (request, reply) {
+    let language = request.headers["accept-language"]
+      ? request.headers["accept-language"]
+      : "en";
+
+    try {
+      let questions = Questions.find();
+
+      //SENDING BACK RESPONSE
+      reply.code(200);
+      resp = {
+        statusCode: 200,
+        message: SUCCESS[language],
+        data: questions,
+      };
+      logs.response = JSON.stringify(resp);
+      logs.status = "SUCCESS";
+      await audit_trail.create(logs);
+      return resp;
+    } catch (err) {
+      console.error(err);
+      resp = {
+        statusCode: 400,
+        message: SERVER_ERROR[language],
+      };
+      logs.response = JSON.stringify(resp);
+      logs.status = "FAILURE";
+      await audit_trail.create(logs);
+      reply.code(400);
+      return resp;
+    }
+  });
 
   fastify.post("/save", async function (request, reply) {});
 
