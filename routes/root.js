@@ -19,20 +19,9 @@ const Token = require("../models/token");
 
 module.exports = async function (fastify, opts) {
   fastify.get("/", async function (request, reply) {
-    return reply.sendFile("index.html");
-    // const users = fastify.mongo.db.collection("users");
-    // console.log(users);
-    // const result = await users.find({}).toArray();
-    // return reply.code(200).send({
-    //   message: result,
-    // });
-    // let user = {
-    //   email: "abid@gmail.com",
-    //   password: "abid@123",
-    //   device: "device_id",
-    // };
-    // const newNote = await users.create(user);
-    // console.log(newNote);
+    return reply.code(200).send({
+      message: "SERVER IS RUNNING",
+    });
   });
 
   fastify.post(
