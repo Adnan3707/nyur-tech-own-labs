@@ -30,7 +30,7 @@ const app = Fastify({
 app.register(require("./app.js"));
 
 // process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
-let config = { port: process.env.PORT || 3000 };
+let config = { port: process.env.PORT || 3000, host: "0.0.0.0" };
 
 // Start listening.
 const start = async () => {
