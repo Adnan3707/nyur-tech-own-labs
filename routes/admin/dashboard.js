@@ -12,58 +12,8 @@ module.exports = async function (fastify, opts) {
     async function (request, reply) {
       return reply.code(200).send({
         statusCode: 200,
-        message: "OUN LABS ROOT RUNNING...",
+        message: "DASHBOARD OUN LABS ROOT RUNNING...",
       });
-    }
-  );
-
-  fastify.post(
-    "/newQS",
-    {
-      preValidation: [fastify.rootauthorize],
-    },
-    async function (request, reply) {
-      let language = request.headers["accept-language"]
-        ? request.headers["accept-language"]
-        : "en";
-
-      let resp,
-        logs = {
-          email: request.body.email ? request.body.email : "NA",
-          action: "Welcome",
-          url: "/welcome",
-          request_header: JSON.stringify(request.headers),
-          request: JSON.stringify(request.body),
-          axios_request: "",
-          axios_response: "",
-        };
-
-      try {
-        let qs = await Questions.create(request.body);
-
-        //SENDING BACK RESPONSE
-        reply.code(200);
-        resp = {
-          statusCode: 200,
-          message: SUCCESS[language],
-          data: qs,
-        };
-        logs.response = JSON.stringify(resp);
-        logs.status = "SUCCESS";
-        await audit_trail.create(logs);
-        return resp;
-      } catch (err) {
-        console.error(err);
-        resp = {
-          statusCode: 400,
-          message: SERVER_ERROR[language],
-        };
-        logs.response = JSON.stringify(resp);
-        logs.status = "FAILURE";
-        await audit_trail.create(logs);
-        reply.code(400);
-        return resp;
-      }
     }
   );
 };
