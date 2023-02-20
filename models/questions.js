@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const questionSchema = new Schema({
-  question_order: { type: String, required: true },
+  question_no: { type: Number, unique: true, required: true },
   question: { type: String, required: true },
 });
 

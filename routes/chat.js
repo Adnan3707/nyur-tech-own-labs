@@ -14,11 +14,11 @@ module.exports = async function (fastify, opts) {
 
     let resp,
       logs = {
-        email: request.body.email ? request.body.email : "NA",
+        email: request.body ? request.body.email : "NA",
         action: "Welcome",
         url: "/welcome",
         request_header: JSON.stringify(request.headers),
-        request: JSON.stringify(request.body),
+        request: JSON.stringify(request.body ? request.body : "NA"),
         axios_request: "",
         axios_response: "",
       };
