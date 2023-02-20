@@ -1,10 +1,10 @@
 {
     "apps": [
         {
-            "name": "ci-auth",
+            "name": "OUNLABS BACKEND",
             "script": "server.js",
             "log_date_format": "YYYY-MM-DD HH:mm:ss",
-	        "instances": "2",
+	        "instances": "1",
             "exec_mode": "cluster",
             "watch": true,
             "ignore_watch": [
@@ -13,7 +13,7 @@
                 "log"
             ],
             "env": {
-                "TZ": "Africa/Tunis"
+                "TZ": "Asia/Riyadh"
             }
         }
     ]
