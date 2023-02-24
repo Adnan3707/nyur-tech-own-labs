@@ -2,18 +2,21 @@ const mongoose = require("mongoose");
 const crypto = require("crypto");
 const { Schema } = mongoose;
 
-const userSchema = new Schema({
-  email: { type: String, required: true },
-  password: { type: String, required: true },
-  role: {
-    type: String,
-    enum: ["USER", "ADMINISTRATOR"],
-    default: "USER",
+const userSchema = new Schema(
+  {
+    email: { type: String, required: true },
+    password: { type: String, required: true },
+    role: {
+      type: String,
+      enum: ["USER", "ADMINISTRATOR"],
+      default: "USER",
+    },
+    device_id: { type: String, required: true },
+    last_activity: { type: Date, default: Date.now },
+    user_status: { type: Boolean, required: true, default: true },
   },
-  device_id: { type: String, required: true },
-  last_activity: { type: Date, default: Date.now },
-  user_status: { type: Boolean, required: true, default: true },
-});
+  { timestamps: true }
+);
 
 function setPassword(salt, password) {
   let hash = crypto
