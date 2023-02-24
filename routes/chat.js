@@ -1,10 +1,11 @@
 "use strict";
 const { SERVER_ERROR, SUCCESS } = require("../config/errors.json");
 const audit_trail = require("../models/audit_trial");
-const Chat = require("../models/chat");
-const Connection = require("../models/chat_connection");
 const Questions = require("../models/questions");
 const Responses = require("../models/question_response");
+
+// const Chat = require("../models/chat");
+// const Connection = require("../models/chat_connection");
 
 module.exports = async function (fastify, opts) {
   fastify.post("/welcome", async function (request, reply) {
