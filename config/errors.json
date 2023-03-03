@@ -26,7 +26,7 @@
   "ACCOUNT_DETAILS_WRONG": {
     "error": true,
     "code": 200,
-    "en": "Sorry, your account credentials do not match.",
+    "en": "Sorry, your account credentials does not match.",
     "ar": "عذرا ، بيانات اعتماد حسابك غير متطابقة.",
     "zh": "抱歉，您的帐户凭据不匹配。",
     "ru": "К сожалению, учетные данные вашей учетной записи не совпадают."
