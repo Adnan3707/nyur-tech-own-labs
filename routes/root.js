@@ -357,6 +357,7 @@ module.exports = async function (fastify, opts) {
         // Making JWT Payload
         let payload = {
           email: data.email,
+          role: user.role,
         };
 
         // Generating Token
