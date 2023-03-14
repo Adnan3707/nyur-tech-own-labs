@@ -153,4 +153,76 @@ module.exports = async function (fastify, opts) {
       }
     }
   );
+
+  fastify.delete(
+    "/deleteQS/:id",
+    {
+      preValidation: [fastify.rootauthorize],
+    },
+    async function (request, reply) {
+      let language = request.headers["accept-language"]
+        ? request.headers["accept-language"]
+        : "en";
+
+      let resp,
+        logs = {
+          email: request.body.email ? request.body.email : "NA",
+          action: "Welcome",
+          url: "/welcome",
+          request_header: JSON.stringify(request.headers),
+          request: JSON.stringify(request.body),
+          axios_request: "",
+          axios_response: "",
+        };
+
+      // get the ID from URL
+      const IdOfDocumentToBeRemoved = request.params.id;
+
+
+
+      try {
+        // remove the requested document using Id
+        const removedQS = await Questions.findByIdAndRemove(IdOfDocumentToBeRemoved);
+
+        // decrease the question_no. of each document having question_no greater than the deletedDocument by one.
+        await Questions.updateMany(
+          { question_no: { $gt: removedQS.question_no } },
+          { $inc: { question_no: -1 } }
+        );
+
+        // RESPONSE TO SEND
+        reply.code(200);
+        resp = {
+          statusCode: 200,
+          message: SUCCESS[language],
+          data: removedQS,
+        };
+
+        // LOG
+        logs.response = JSON.stringify(resp);
+        logs.status = "SUCCESS";
+        await audit_trail.create(logs);
+        return resp;
+
+      } catch (err) {
+        console.error(err);
+
+        // RESPONSE TO SEND
+        resp = {
+          statusCode: 500,
+          message: SERVER_ERROR[language],
+        };
+
+        //  LOG
+        logs.response = JSON.stringify(resp);
+        logs.status = "FAILURE";
+        await audit_trail.create(logs);
+        reply.code(400);
+        return resp;
+
+      }
+    }
+  );
+
+
 };
