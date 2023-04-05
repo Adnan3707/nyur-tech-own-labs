@@ -95,14 +95,8 @@ module.exports = async function (fastify, opts) {
     }
   });
 
+  //SOCKET IMPLEMENTATION TEST
   fastify.register(async function (fastify) {
-    /* fastify.addHook("preValidation", async (request, reply) => {
-      // check if the request is authenticated
-      //   if (!request.isAuthenticated()) {
-      //     await reply.code(401).send("not authenticated");
-      //   }
-    }); */
-
     fastify.get(
       "/chat",
       { websocket: true },
@@ -118,11 +112,11 @@ module.exports = async function (fastify, opts) {
           })
         );
 
-        //creating a new connection
-        Connection.create({
-          chat_id: unique_id,
-          remarks: `Client ${unique_id} connected.`,
-        });
+        // creating a new connection
+        // Connection.create({
+        //   chat_id: unique_id,
+        //   remarks: `Client ${unique_id} connected.`,
+        // });
 
         // Chat.create({
         //   chat_id: "UNIQUD",
