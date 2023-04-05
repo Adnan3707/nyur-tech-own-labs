@@ -2,7 +2,11 @@
 const Questions = require("../../models/questions");
 const Paths = require("../../models/paths");
 const audit_trail = require("../../models/audit_trial");
-const { SERVER_ERROR, SUCCESS } = require("../../config/errors.json");
+const {
+  SERVER_ERROR,
+  PATH_DUPLICATE,
+  SUCCESS,
+} = require("../../config/errors.json");
 
 module.exports = async function (fastify, opts) {
   fastify.post(
@@ -142,6 +146,19 @@ module.exports = async function (fastify, opts) {
         return resp;
       } catch (err) {
         console.error(err);
+        if (err.name === "MongoServerError" && err.code === 11000) {
+          // CATCH DUPLICATE PATHNAME ERROR
+          resp = {
+            statusCode: 400,
+            message: PATH_DUPLICATE[language],
+          };
+          logs.response = JSON.stringify(resp);
+          logs.status = "FAILURE";
+          await audit_trail.create(logs);
+          reply.code(400);
+          return resp;
+        }
+
         resp = {
           statusCode: 400,
           message: SERVER_ERROR[language],
