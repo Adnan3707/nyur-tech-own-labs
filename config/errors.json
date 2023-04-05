@@ -71,6 +71,14 @@
     "zh": "您的请求错误",
     "ru": "Ошибка в обслуживании вашего запроса"
   },
+  "PATH_NOT_FOUND": {
+    "error": true,
+    "code": 500,
+    "en": "Sorry unable to find a matching path",
+    "ar": "آسف غير قادر على العثور على مسار مطابق",
+    "zh": "抱歉找不到匹配的路径",
+    "ru": "К сожалению, не удалось найти соответствующий путь"
+  },
   "AUTHENTICATION_SUCCESS": {
     "error": true,
     "code": 200,

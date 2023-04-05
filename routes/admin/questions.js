@@ -1,5 +1,6 @@
 "use strict";
 const Questions = require("../../models/questions");
+const Paths = require("../../models/paths");
 const audit_trail = require("../../models/audit_trial");
 const { SERVER_ERROR, SUCCESS } = require("../../config/errors.json");
 
@@ -105,6 +106,56 @@ module.exports = async function (fastify, opts) {
   );
 
   fastify.post(
+    "/newPath",
+    {
+      preValidation: [fastify.rootauthorize],
+    },
+    async function (request, reply) {
+      let language = request.headers["accept-language"]
+        ? request.headers["accept-language"]
+        : "en";
+
+      let resp,
+        logs = {
+          email: request.body.email ? request.body.email : "NA",
+          action: "newPath",
+          url: "/newPath",
+          request_header: JSON.stringify(request.headers),
+          request: JSON.stringify(request.body),
+          axios_request: "",
+          axios_response: "",
+        };
+
+      try {
+        let qs = await Paths.create(request.body);
+
+        //SENDING BACK RESPONSE
+        reply.code(200);
+        resp = {
+          statusCode: 200,
+          message: SUCCESS[language],
+          data: qs,
+        };
+        logs.response = JSON.stringify(resp);
+        logs.status = "SUCCESS";
+        await audit_trail.create(logs);
+        return resp;
+      } catch (err) {
+        console.error(err);
+        resp = {
+          statusCode: 400,
+          message: SERVER_ERROR[language],
+        };
+        logs.response = JSON.stringify(resp);
+        logs.status = "FAILURE";
+        await audit_trail.create(logs);
+        reply.code(400);
+        return resp;
+      }
+    }
+  );
+
+  fastify.post(
     "/newMultiQS",
     {
       preValidation: [fastify.rootauthorize],
@@ -178,11 +229,11 @@ module.exports = async function (fastify, opts) {
       // get the ID from URL
       const IdOfDocumentToBeRemoved = request.params.id;
 
-
-
       try {
         // remove the requested document using Id
-        const removedQS = await Questions.findByIdAndRemove(IdOfDocumentToBeRemoved);
+        const removedQS = await Questions.findByIdAndRemove(
+          IdOfDocumentToBeRemoved
+        );
 
         // decrease the question_no. of each document having question_no greater than the deletedDocument by one.
         await Questions.updateMany(
@@ -203,7 +254,6 @@ module.exports = async function (fastify, opts) {
         logs.status = "SUCCESS";
         await audit_trail.create(logs);
         return resp;
-
       } catch (err) {
         console.error(err);
 
@@ -219,7 +269,6 @@ module.exports = async function (fastify, opts) {
         await audit_trail.create(logs);
         reply.code(400);
         return resp;
-
       }
     }
   );
@@ -254,7 +303,11 @@ module.exports = async function (fastify, opts) {
 
       try {
         // update the requested document using Id
-        const editedQS = await Questions.findByIdAndUpdate(IdOfDocumentToBeEdited, requestedUpdate, { new: true });
+        const editedQS = await Questions.findByIdAndUpdate(
+          IdOfDocumentToBeEdited,
+          requestedUpdate,
+          { new: true }
+        );
 
         // RESPONSE TO SEND
         reply.code(200);
@@ -269,7 +322,6 @@ module.exports = async function (fastify, opts) {
         logs.status = "SUCCESS";
         await audit_trail.create(logs);
         return resp;
-
       } catch (err) {
         console.error(err);
 
@@ -288,6 +340,4 @@ module.exports = async function (fastify, opts) {
       }
     }
   );
-
-
 };

@@ -1,7 +1,12 @@
 "use strict";
-const { SERVER_ERROR, SUCCESS } = require("../config/errors.json");
+const {
+  SERVER_ERROR,
+  PATH_NOT_FOUND,
+  SUCCESS,
+} = require("../config/errors.json");
 const audit_trail = require("../models/audit_trial");
 const Questions = require("../models/questions");
+const Paths = require("../models/paths");
 const Responses = require("../models/question_response");
 
 // const Chat = require("../models/chat");
@@ -77,6 +82,67 @@ module.exports = async function (fastify, opts) {
         statusCode: 200,
         message: SUCCESS[language],
       };
+      logs.response = JSON.stringify(resp);
+      logs.status = "SUCCESS";
+      await audit_trail.create(logs);
+      return resp;
+    } catch (err) {
+      console.error(err);
+      resp = {
+        statusCode: 400,
+        message: SERVER_ERROR[language],
+      };
+      logs.response = JSON.stringify(resp);
+      logs.status = "FAILURE";
+      await audit_trail.create(logs);
+      reply.code(400);
+      return resp;
+    }
+  });
+
+  fastify.post("/searchpath", async function (request, reply) {
+    let language = request.headers["accept-language"]
+      ? request.headers["accept-language"]
+      : "en";
+
+    let resp,
+      logs = {
+        email: request.body.email ? request.body.email : "NA",
+        action: "Search path",
+        url: "/searchpath",
+        request_header: JSON.stringify(request.headers),
+        request: JSON.stringify(request.body ? request.body : "NA"),
+        axios_request: "",
+        axios_response: "",
+      };
+
+    try {
+      //SEARCHING THE PATH VIA TAGS
+      let paths = await Paths.find({
+        path_tags: { $elemMatch: { $eq: request.body.searchText } },
+      });
+
+      let questions;
+      if (paths.length > 0) {
+        // IF PATH EXISTS
+        questions = paths[0].questions;
+        //SENDING BACK RESPONSE
+        reply.code(200);
+        resp = {
+          statusCode: 200,
+          message: SUCCESS[language],
+          data: questions,
+        };
+      } else {
+        questions = "Path unavailable";
+        //SENDING BACK RESPONSE
+        reply.code(404);
+        resp = {
+          statusCode: 404,
+          message: PATH_NOT_FOUND[language],
+        };
+      }
+
       logs.response = JSON.stringify(resp);
       logs.status = "SUCCESS";
       await audit_trail.create(logs);
