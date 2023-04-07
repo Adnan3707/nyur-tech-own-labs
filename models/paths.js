@@ -9,7 +9,7 @@ const newQuestionSchema = new Schema({
 const pathSchema = new Schema(
   {
     path_name: { type: String, unique: true, required: true },
-    path_tags: { type: Array, required: true },
+    path_tags: { type: Array, required: true, index: true, text: true },
     questions: [newQuestionSchema],
   },
   { timestamps: true }
