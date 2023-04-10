@@ -118,11 +118,6 @@ module.exports = async function (fastify, opts) {
       };
 
     try {
-      //SEARCHING THE PATH VIA TAGS
-      // let paths = await Paths.find({
-      //   path_tags: { $elemMatch: { $eq: request.body.searchText } },
-      // });
-
       let paths = await Paths.find({
         $text: { $search: request.body.searchText },
       });
