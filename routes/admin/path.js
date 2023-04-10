@@ -93,10 +93,26 @@ module.exports = async function (fastify, opts) {
           axios_request: "",
           axios_response: "",
         };
+      let data = request.body;
 
       try {
-        // GETTING PATH ID
+        // GETTING PRIMARY PATH ID
         let primary_path = await Paths.findById(request.body.primary_path_id);
+
+        //GETTING LAST UPDATED VERSION OF THE PATH
+        let sub_path = await SubPaths.findOne({
+          primary_path_id: request.body.primary_path_id,
+        }).sort({
+          sub_path_no: -1,
+        });
+
+        if (sub_path) {
+          data.sub_path_no = parseFloat(
+            parseFloat(sub_path.sub_path_no) + 0.1
+          ).toFixed(1);
+        } else {
+          data.sub_path_no = "1.0";
+        }
 
         // IF PATH DOES NOT EXIST
         if (primary_path == null) {
@@ -112,7 +128,6 @@ module.exports = async function (fastify, opts) {
         }
         // PATH ID CHECK ENDS
 
-        let data = request.body;
         data.primary_path_name = primary_path.path_name;
         let qs = await SubPaths.create(data);
 
