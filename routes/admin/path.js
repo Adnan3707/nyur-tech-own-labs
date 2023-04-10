@@ -96,9 +96,7 @@ module.exports = async function (fastify, opts) {
 
       try {
         // GETTING PATH ID
-        let primary_path = await Paths.findOne({
-          _id: request.body.primary_path_id,
-        });
+        let primary_path = await Paths.findById(request.body.primary_path_id);
 
         // IF PATH DOES NOT EXIST
         if (primary_path == null) {

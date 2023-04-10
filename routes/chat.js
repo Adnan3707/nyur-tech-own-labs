@@ -7,6 +7,7 @@ const {
 const audit_trail = require("../models/audit_trial");
 const Questions = require("../models/questions");
 const Paths = require("../models/paths");
+const SubPaths = require("../models/sub_paths");
 const Responses = require("../models/question_response");
 
 // const Chat = require("../models/chat");
@@ -129,13 +130,18 @@ module.exports = async function (fastify, opts) {
       let questions;
       if (paths.length > 0) {
         // IF PATH EXISTS
-        questions = paths[0].questions;
+        let sub_path = await SubPaths.find({
+          primary_path_id: paths[0]._id,
+        }).sort({
+          sub_path_no: 1,
+        });
+
         //SENDING BACK RESPONSE
         reply.code(200);
         resp = {
           statusCode: 200,
           message: SUCCESS[language],
-          data: questions,
+          data: sub_path,
         };
       } else {
         questions = "Path unavailable";

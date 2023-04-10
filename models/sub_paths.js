@@ -11,7 +11,7 @@ const subpathSchema = new Schema(
     primary_path_id: { type: mongoose.ObjectId, required: true },
     primary_path_name: { type: String, required: true },
     sub_path_name: { type: String, unique: true, required: true },
-    sub_path_id: { type: Number, required: true },
+    sub_path_no: { type: String, required: true },
     questions: [newQuestionSchema],
   },
   { timestamps: true }
