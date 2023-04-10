@@ -110,7 +110,7 @@ module.exports = async function (fastify, opts) {
   );
 
   fastify.post(
-    "/newPath",
+    "/newPath_old",
     {
       preValidation: [fastify.rootauthorize],
     },
