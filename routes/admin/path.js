@@ -169,4 +169,88 @@ module.exports = async function (fastify, opts) {
       }
     }
   );
+  fastify.post(
+    "/editSubPath",
+    {
+      preValidation: [fastify.rootauthorize],
+    },async function (request, reply) {
+      let language = request.headers["accept-language"]
+        ? request.headers["accept-language"]
+        : "en";
+
+      let resp,
+        logs = {
+          email: request.body.email ? request.body.email : "NA",
+          action: "editSubPath",
+          url: "/editSubPath",
+          request_header: JSON.stringify(request.headers),
+          request: JSON.stringify(request.body),
+          axios_request: "",
+          axios_response: "",
+        };
+      let paramData = request.query
+      let data = request.body;
+
+      try{
+     // Check Query & Body
+        if ( !Object.hasOwnProperty.bind(paramData)('sub_path_id') ){
+          resp = {
+            statusCode: 400,
+            message: 'provide primary path id or search text',
+          };
+          logs.response = JSON.stringify(resp);
+          logs.status = "FAILURE";
+          // await audit_trail.create(logs);
+          reply.code(400);
+          return resp;
+        }
+        //GETTING LAST UPDATED VERSION OF THE PATH
+        let sub_path = await SubPaths.findById(paramData.sub_path_id)
+
+        if (sub_path['sub_path_name'] == data['previous_sub_path_name']) {
+          sub_path['sub_path_name'] = data['new_sub_path_name']
+     // Match  Questions Only 
+     data.questions.forEach(updatedQuestion => {
+      const foundQuestion = sub_path.questions.find(question => question.question_no == updatedQuestion.question_no);
+      if (foundQuestion) {
+        foundQuestion.question = updatedQuestion.question;
+      }
+      // console.log(foundQuestion)
+    });
+    // console.log(sub_path)
+     return sub_path
+
+        } else {
+          return 'Error in input data'
+        }
+        
+
+      } catch (err) {
+        console.error(err);
+        if (err.name === "MongoServerError" && err.code === 11000) {
+          // CATCH DUPLICATE PATHNAME ERROR
+          resp = {
+            statusCode: 400,
+            message: PATH_DUPLICATE[language],
+          };
+          logs.response = JSON.stringify(resp);
+          logs.status = "FAILURE";
+          await audit_trail.create(logs);
+          reply.code(400);
+          return resp;
+        }
+
+        resp = {
+          statusCode: 400,
+          message: SERVER_ERROR[language],
+        };
+        logs.response = JSON.stringify(resp);
+        logs.status = "FAILURE";
+        await audit_trail.create(logs);
+        reply.code(400);
+        return resp;
+      }
+
+    }
+  )
 };
