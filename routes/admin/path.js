@@ -8,6 +8,8 @@ const {
   PATH_NOT_FOUND,
   SUCCESS,
 } = require("../../config/errors.json");
+const validator = require('../../Validators/validators')
+
 
 module.exports = async function (fastify, opts) {
   fastify.post(
@@ -169,8 +171,8 @@ module.exports = async function (fastify, opts) {
       }
     }
   );
-  fastify.post(
-    "/editSubPath",
+  fastify.patch(
+    "/updateContent",
     {
       preValidation: [fastify.rootauthorize],
     },async function (request, reply) {
@@ -181,49 +183,90 @@ module.exports = async function (fastify, opts) {
       let resp,
         logs = {
           email: request.body.email ? request.body.email : "NA",
-          action: "editSubPath",
-          url: "/editSubPath",
+          action: "updateContent",
+          url: "/updateContent",
           request_header: JSON.stringify(request.headers),
           request: JSON.stringify(request.body),
           axios_request: "",
           axios_response: "",
         };
-      let paramData = request.query
       let data = request.body;
-
+      //Check if sub path will cointain at least one word
+      const wordRegex = /\w+/;
       try{
-     // Check Query & Body
-        if ( !Object.hasOwnProperty.bind(paramData)('sub_path_id') ){
+     // Check Parrent Path Name Exists
+        if ( !Object.hasOwnProperty.bind(data)('category_content') ){
           resp = {
             statusCode: 400,
-            message: 'provide primary path id or search text',
+            message: 'Provide category_content in body',
           };
           logs.response = JSON.stringify(resp);
           logs.status = "FAILURE";
-          // await audit_trail.create(logs);
+          await audit_trail.create(logs);
           reply.code(400);
           return resp;
         }
-        //GETTING LAST UPDATED VERSION OF THE PATH
-        let sub_path = await SubPaths.findById(paramData.sub_path_id)
 
-        if (sub_path['sub_path_name'] == data['previous_sub_path_name']) {
-          sub_path['sub_path_name'] = data['new_sub_path_name']
-     // Match  Questions Only 
+        //Find Sub Path
+        let sub_path = await SubPaths.findOne({
+          primary_path_name: data.category_content
+        })
+         // Check :- New path name At least one Word 
+         if(! wordRegex.test(data['sub_path_name'])){
+          resp = {
+            statusCode: 400,
+            message: 'Provide Sub Path Name',
+          };
+          logs.response = JSON.stringify(resp);
+          logs.status = "FAILURE";
+          await audit_trail.create(logs);
+          reply.code(400);
+          return resp;
+        }
+         // Add Different Name
+        if (sub_path['sub_path_name'] != data['sub_path_name']) {
+          sub_path['sub_path_name'] = data['sub_path_name']
+        }
+
+        // Check if Question Schema is Right
+        let qSchema = validator.hasSameSchema(data.questions)
+        if(!qSchema){
+          resp = {
+            statusCode: 400,
+            message: 'Wrong questions Schma',
+          };
+          logs.response = JSON.stringify(resp);
+          logs.status = "FAILURE";
+          await audit_trail.create(logs);
+          reply.code(400);
+          return resp;
+        }
+
+        // Match  Questions , Update Questions  
      data.questions.forEach(updatedQuestion => {
       const foundQuestion = sub_path.questions.find(question => question.question_no == updatedQuestion.question_no);
       if (foundQuestion) {
         foundQuestion.question = updatedQuestion.question;
+      } else {
+        sub_path.questions.push(updatedQuestion);
       }
-      // console.log(foundQuestion)
-    });
+        });
     // console.log(sub_path)
-     return sub_path
 
-        } else {
-          return 'Error in input data'
-        }
-        
+    // If Everything Is Correct
+    await sub_path.save()
+    // Send Response
+      resp = {
+        statusCode: 200,
+        message: 'data updated to Mongodb',
+        data: sub_path
+      };
+      logs.response = JSON.stringify(resp);
+      logs.status = "SUCCESS";
+      await audit_trail.create(logs);
+      reply.code(200);
+
+      return resp
 
       } catch (err) {
         console.error(err);
@@ -242,7 +285,7 @@ module.exports = async function (fastify, opts) {
 
         resp = {
           statusCode: 400,
-          message: SERVER_ERROR[language],
+          message: PATH_NOT_FOUND[language],
         };
         logs.response = JSON.stringify(resp);
         logs.status = "FAILURE";
