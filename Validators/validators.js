@@ -24,4 +24,4 @@ function hasSameSchema(array) {
     return true; // All objects have the same schema
   }
 
-module.exports = {hasSameSchema}
+module.exports = {hasSameSchema,extractPathData}

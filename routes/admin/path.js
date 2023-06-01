@@ -296,4 +296,52 @@ module.exports = async function (fastify, opts) {
 
     }
   )
-};
+  fastify.post('/pathDetails', {
+    preValidation: [fastify.rootauthorize],
+  },async function (request,reply){
+    let language = request.headers["accept-language"]
+    ? request.headers["accept-language"]
+    : "en";
+
+  let resp,
+    logs = {
+      email: request.body.email ? request.body.email : "NA",
+      action: "pathDetails",
+      url: "/pathDetails",
+      request_header: JSON.stringify(request.headers),
+      request: JSON.stringify(request.body),
+      axios_request: "",
+      axios_response: "",
+    };
+    try{
+
+      // Retreieve Path Path Name & if 
+    let path = await Paths.find({}, { _id: 1,path_name: 1 })
+    // Send Response
+    return path
+    } catch (err) {
+      console.error(err);
+      if (err.name === "MongoServerError" && err.code === 11000) {
+        // CATCH DUPLICATE PATHNAME ERROR
+        resp = {
+          statusCode: 400,
+          message: PATH_DUPLICATE[language],
+        };
+        logs.response = JSON.stringify(resp);
+        logs.status = "FAILURE";
+        await audit_trail.create(logs);
+        reply.code(400);
+        return resp;
+      }
+
+      resp = {
+        statusCode: 400,
+        message: SERVER_ERROR[language],
+      };
+      logs.response = JSON.stringify(resp);
+      logs.status = "FAILURE";
+      await audit_trail.create(logs);
+      reply.code(400);
+      return resp;
+    }
+})}
