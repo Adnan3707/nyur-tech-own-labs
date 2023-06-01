@@ -135,17 +135,25 @@ module.exports = async function (fastify, opts) {
      } 
        // Check For Dubilicate                 response , String 
      let dubilicate = validator.hasSameString(response.response , Object.values(data.response)[0])
-     // No Dubilicate Found , Save New Response
+     // No Dubilicate Found 
      if(!dubilicate){
+      //  Save New Response
       response.response.push(data.response)
-      response.save()
+      response.save();
+            //SENDING BACK RESPONSE
+            reply.code(200);
+            resp = {
+              statusCode: 200,
+              message: SUCCESS[language],
+              data: response
+            };
+            return resp
      }
-      //SENDING BACK RESPONSE
-      reply.code(200);
+      //Already Exists
+      reply.code(500);
       resp = {
-        statusCode: 200,
-        message: SUCCESS[language],
-        data: response
+        statusCode: 500,
+        message: ALREADY_EXISTS[language],
       };
       logs.response = JSON.stringify(resp);
       logs.status = "SUCCESS";

@@ -102,5 +102,13 @@
     "ar": "نجاح",
     "zh": "成功",
     "ru": "успех"
+  },
+  "ALREADY_EXISTS": {
+    "error": true,
+    "code": 500,
+    "en": "Sorry Question Already Exists",
+    "ar": " ",
+    "zh": " ",
+    "ru": " "
   }
 }
