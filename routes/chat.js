@@ -156,7 +156,7 @@ module.exports = async function (fastify, opts) {
         message: ALREADY_EXISTS[language],
       };
       logs.response = JSON.stringify(resp);
-      logs.status = "SUCCESS";
+      logs.status = "FAILURE";
       await audit_trail.create(logs);
       return resp;
     } catch (err) {
