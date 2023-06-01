@@ -23,5 +23,19 @@ function hasSameSchema(array) {
   
     return true; // All objects have the same schema
   }
-
-module.exports = {hasSameSchema}
+  function hasSameString(array, searchString) {
+    const lowercaseSearchString = searchString.toLowerCase();
+    let foundMatch = false;
+  
+    array.forEach(obj => {
+      Object.values(obj).forEach(value => {
+        if (value && value.toString().toLowerCase() === lowercaseSearchString) {
+          foundMatch = true; // Found a matching string in the object
+        }
+      });
+    });
+  
+    return foundMatch;
+  }
+  
+module.exports = {hasSameSchema,hasSameString}

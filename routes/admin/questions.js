@@ -291,7 +291,7 @@ module.exports = async function (fastify, opts) {
   );
 
   fastify.patch(
-    "/editQS/:id",
+    "/editQS",
     {
       preValidation: [fastify.rootauthorize],
     },

@@ -174,7 +174,7 @@ module.exports = async function (fastify, opts) {
   fastify.patch(
     "/updateContent",
     {
-      preValidation: [fastify.rootauthorize],
+      preValidation: [fastify.rootauthorize]
     },async function (request, reply) {
       let language = request.headers["accept-language"]
         ? request.headers["accept-language"]

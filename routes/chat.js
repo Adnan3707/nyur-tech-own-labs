@@ -9,6 +9,7 @@ const Questions = require("../models/questions");
 const Paths = require("../models/paths");
 const SubPaths = require("../models/sub_paths");
 const Responses = require("../models/question_response");
+const validator = require('../Validators/validators')
 
 // const Chat = require("../models/chat");
 // const Connection = require("../models/chat_connection");
@@ -100,7 +101,69 @@ module.exports = async function (fastify, opts) {
       return resp;
     }
   });
+  fastify.post("/checkSaveResponse", async function (request, reply) {
+    let language = request.headers["accept-language"]
+      ? request.headers["accept-language"]
+      : "en";
 
+    let resp,
+      logs = {
+        email: request.body.email ? request.body.email : "NA",
+        action: "Save",
+        url: "/save",
+        request_header: JSON.stringify(request.headers),
+        request: JSON.stringify(request.body),
+        axios_request: "",
+        axios_response: "",
+      };
+      let data = request.body
+
+    try {
+     let response =  await Responses.findById(data.id);
+     // If No Record Found
+     if(!response) {
+            //SENDING BACK RESPONSE // No Id Found
+            reply.code(400);
+            resp = {
+              statusCode: 400,
+              message: PATH_NOT_FOUND[language],
+            };
+            logs.response = JSON.stringify(resp);
+            logs.status = "FAILURE";
+            await audit_trail.create(logs);
+            return resp;
+     } 
+       // Check For Dubilicate                 response , String 
+     let dubilicate = validator.hasSameString(response.response , Object.values(data.response)[0])
+     // No Dubilicate Found , Save New Response
+     if(!dubilicate){
+      response.response.push(data.response)
+      response.save()
+     }
+      //SENDING BACK RESPONSE
+      reply.code(200);
+      resp = {
+        statusCode: 200,
+        message: SUCCESS[language],
+        data: response
+      };
+      logs.response = JSON.stringify(resp);
+      logs.status = "SUCCESS";
+      await audit_trail.create(logs);
+      return resp;
+    } catch (err) {
+      console.error(err);
+      resp = {
+        statusCode: 400,
+        message: SERVER_ERROR[language],
+      };
+      logs.response = JSON.stringify(resp);
+      logs.status = "FAILURE";
+      await audit_trail.create(logs);
+      reply.code(400);
+      return resp;
+    }
+  });
   fastify.post("/searchpath", async function (request, reply) {
     let language = request.headers["accept-language"]
       ? request.headers["accept-language"]
