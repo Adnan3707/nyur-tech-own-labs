@@ -120,9 +120,8 @@ module.exports = async function (fastify, opts) {
     try {
 
       data.response.forEach(async Object => {      
-        let test = await Responses.updateOne({_id:data.id , 'response.question':{ '$regex' : Object.question, '$options' : 'i' } },{ $set: { 'response.$.response' : Object.response}}) 
-        console.log(test)
-         if(test.matchedCount == 0){
+        let match = await Responses.updateOne({_id:data.id , 'response.question':{ '$regex' : Object.question, '$options' : 'i' } },{ $set: { 'response.$.response' : Object.response}})
+         if(match.matchedCount == 0){
         await Responses.updateOne({_id:data.id },{ $push: {'response':Object}}) 
            }    
       })
