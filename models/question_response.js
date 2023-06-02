@@ -3,7 +3,10 @@ const { Schema } = mongoose;
 
 const responseSchema = new Schema(
   {
-    response: { type: Object, required: true },
+    response: [{
+              question:{ type: String, required: true },
+              response: {type:String,required:true}
+    }],
   },
   { timestamps: true }
 );

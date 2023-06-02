@@ -119,44 +119,18 @@ module.exports = async function (fastify, opts) {
       let data = request.body
 
     try {
-     let response =  await Responses.findById(data.id);
-     // If No Record Found
-     if(!response) {
-            //SENDING BACK RESPONSE // No Id Found
-            reply.code(400);
-            resp = {
-              statusCode: 400,
-              message: PATH_NOT_FOUND[language],
-            };
-            logs.response = JSON.stringify(resp);
-            logs.status = "FAILURE";
-            await audit_trail.create(logs);
-            return resp;
-     } 
-       // Check For Dubilicate                 response , String 
-     let dubilicate = validator.hasSameString(response.response , Object.values(data.response)[0])
-     // No Dubilicate Found 
-     if(!dubilicate){
-      //  Save New Response
-      response.response.push(data.response)
-      response.save();
-            //SENDING BACK RESPONSE
-            reply.code(200);
-            resp = {
-              statusCode: 200,
-              message: SUCCESS[language],
-              data: response
-            };
-            return resp
-     }
+
+      data.response.forEach(async Object => {
+        await Responses.updateOne({_id:request.body.id , 'response.question': Object.question},{ $set: { 'response.$.response' : Object.response}} )
+      })
       //Already Exists
-      reply.code(500);
+      reply.code(200);
       resp = {
-        statusCode: 500,
-        message: ALREADY_EXISTS[language],
+        statusCode: 200,
+        message: SUCCESS[language],
       };
       logs.response = JSON.stringify(resp);
-      logs.status = "FAILURE";
+      logs.status = "SUCCESS";
       await audit_trail.create(logs);
       return resp;
     } catch (err) {
