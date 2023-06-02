@@ -121,9 +121,9 @@ module.exports = async function (fastify, opts) {
     try {
 
       data.response.forEach(async Object => {
-        await Responses.updateOne({_id:request.body.id , 'response.question': Object.question},{ $set: { 'response.$.response' : Object.response}} )
+        await Responses.updateOne({_id:data.id , 'response.question': Object.question},{ $set: { 'response.$.response' : Object.response}} )
       })
-      //Already Exists
+      //Update Success 
       reply.code(200);
       resp = {
         statusCode: 200,
