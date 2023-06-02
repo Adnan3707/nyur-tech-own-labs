@@ -117,17 +117,20 @@ module.exports = async function (fastify, opts) {
         axios_response: "",
       };
       let data = request.body
-
     try {
 
-      data.response.forEach(async Object => {                          // Case insensitive Added
-        await Responses.updateOne({_id:data.id , 'response.question':{ '$regex' : Object.question, '$options' : 'i' } },{ $set: { 'response.$.response' : Object.response}} )
+      data.response.forEach(async Object => {      
+        let test = await Responses.updateOne({_id:data.id , 'response.question':{ '$regex' : Object.question, '$options' : 'i' } },{ $set: { 'response.$.response' : Object.response}}) 
+        console.log(test)
+         if(test.matchedCount == 0){
+        await Responses.updateOne({_id:data.id },{ $push: {'response':Object}}) 
+           }    
       })
       //Update Success 
       reply.code(200);
       resp = {
         statusCode: 200,
-        message: SUCCESS[language],
+        message: SUCCESS[language]
       };
       logs.response = JSON.stringify(resp);
       logs.status = "SUCCESS";
