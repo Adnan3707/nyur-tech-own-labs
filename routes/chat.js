@@ -120,8 +120,8 @@ module.exports = async function (fastify, opts) {
 
     try {
 
-      data.response.forEach(async Object => {
-        await Responses.updateOne({_id:data.id , 'response.question': Object.question},{ $set: { 'response.$.response' : Object.response}} )
+      data.response.forEach(async Object => {                          // Case insensitive Added
+        await Responses.updateOne({_id:data.id , 'response.question':{ '$regex' : Object.question, '$options' : 'i' } },{ $set: { 'response.$.response' : Object.response}} )
       })
       //Update Success 
       reply.code(200);
